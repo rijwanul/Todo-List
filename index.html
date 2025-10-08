@@ -75,6 +75,9 @@
             --completed-color: #9ca3af;
             --delete-color: #ef4444;
             --success-color: #10b981;
+            --pending-color: #f59e0b;
+            --info-color: #3b82f6;
+            --tab-active-border: #6d28d9;
         }
         
         body {
@@ -99,9 +102,285 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             padding-bottom: 1.5rem;
             border-bottom: 2px solid var(--accent-light);
+        }
+        
+        /* Dashboard Styles */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background-color: var(--bg-color);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-icon {
+            font-size: 1.5rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 1rem;
+            background-color: var(--secondary-color);
+        }
+        
+        .stat-card:nth-child(1) .stat-icon {
+            color: var(--success-color);
+        }
+        
+        .stat-card:nth-child(2) .stat-icon {
+            color: var(--pending-color);
+        }
+        
+        .stat-card:nth-child(3) .stat-icon {
+            color: var(--info-color);
+        }
+        
+        .stat-card:nth-child(4) .stat-icon {
+            color: var(--primary-color);
+        }
+        
+        .stat-content span:first-child {
+            font-size: 1.75rem;
+            font-weight: 700;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        /* Tab Filter Styles */
+        .tabs-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+        }
+        
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button:hover {
+            color: var(--primary-color);
+        }
+        
+        .tab-button.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--tab-active-border);
+        }
+        
+        .tab-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        /* Import/Export Dropdown Styles */
+        .dropdown-menu {
+            position: absolute;
+            background-color: var(--card-bg);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            z-index: 10;
+            display: none;
+            right: 0;
+            margin-top: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1.25rem;
+            text-align: left;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--bg-color);
+        }
+        
+        .tab-actions {
+            position: relative;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.25rem;
+            justify-content: flex-end;
+        }
+        
+        .cancel-btn {
+            background-color: var(--text-light);
+        }
+        
+        .cancel-btn:hover {
+            background-color: var(--delete-color);
+        }
+        
+        /* Completed Section Styles */
+        .completed-section {
+            margin-top: 2rem;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 1rem;
+        }
+        
+        .completed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            cursor: pointer;
+        }
+        
+        .completed-header h3 {
+            font-size: 1.1rem;
+            color: var(--completed-color);
+            margin: 0;
+        }
+        
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-btn.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .completed-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 500px;
+            overflow-y: auto;
+            transition: max-height 0.3s ease;
+        }
+        
+        .completed-list.collapsed {
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .btn {
@@ -112,6 +391,12 @@
             padding: 0.75rem 1.25rem;
             border-radius: 8px;
             font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -123,28 +408,96 @@
                 <i class="fas fa-moon"></i>
             </button>
         </header>
+        
+        <!-- New Dashboard Section -->
+        <div class="dashboard">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-check"></i></div>
+                <div class="stat-content">
+                    <span id="completed-count">0</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-content">
+                    <span id="pending-count">0</span>
+                    <span class="stat-label">Pending</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-list"></i></div>
+                <div class="stat-content">
+                    <span id="total-count">0</span>
+                    <span class="stat-label">Total</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
+                <div class="stat-content">
+                    <span id="completion-rate">0%</span>
+                    <span class="stat-label">Completion Rate</span>
+                </div>
+            </div>
+        </div>
 
         <div class="add-task-container">
             <input type="text" id="new-task" placeholder="What needs to be done?" autofocus>
             <button id="add-task-btn" class="btn add-btn"><i class="fas fa-plus"></i> Add Task</button>
         </div>
 
-        <div class="filter-container">
-            <select id="filter-tasks" aria-label="Filter tasks">
-                <option value="all">All Tasks</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-            </select>
-            <button id="undo-btn" class="btn undo-btn" title="Undo last action" aria-label="Undo"><i class="fas fa-undo"></i></button>
-            <button id="redo-btn" class="btn redo-btn" title="Redo last action" aria-label="Redo"><i class="fas fa-redo"></i></button>
-            <button id="import-export-toggle" class="btn import-export-btn"><i class="fas fa-file-import"></i> Import/Export</button>
+        <!-- New Tab Filter -->
+        <div class="tabs-container">
+            <div class="tab-buttons">
+                <button id="tab-all" class="tab-button active" data-filter="all">All Tasks</button>
+                <button id="tab-active" class="tab-button" data-filter="active">Active</button>
+                <button id="tab-completed" class="tab-button" data-filter="completed">Completed</button>
+            </div>
+            <div class="tab-actions">
+                <button id="undo-btn" class="btn undo-btn" title="Undo last action" aria-label="Undo"><i class="fas fa-undo"></i></button>
+                <button id="redo-btn" class="btn redo-btn" title="Redo last action" aria-label="Redo"><i class="fas fa-redo"></i></button>
+                <button id="import-export-toggle" class="btn import-export-btn"><i class="fas fa-file-import"></i> Import/Export</button>
+            </div>
+        </div>
+        
+        <!-- Updated Import/Export dropdown -->
+        <div id="import-export-dropdown" class="dropdown-menu">
+            <button id="export-btn" class="dropdown-item"><i class="fas fa-file-export"></i> Export Tasks</button>
+            <button id="import-btn" class="dropdown-item"><i class="fas fa-file-import"></i> Import Tasks</button>
+        </div>
+        
+        <!-- Import Dialog -->
+        <div id="import-dialog" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-file-import"></i> Import Tasks</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <textarea id="import-tasks" placeholder="Paste your tasks here in any format..."></textarea>
+                    <div class="modal-actions">
+                        <button id="import-tasks-btn" class="btn import-btn"><i class="fas fa-file-import"></i> Import Tasks</button>
+                        <button id="cancel-import-btn" class="btn cancel-btn"><i class="fas fa-times"></i> Cancel</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="drag-instructions">
             <i class="fas fa-info-circle"></i> Drag tasks to reorder them
         </div>
 
+        <!-- Active tasks list -->
         <ul id="task-list" aria-label="Task list"></ul>
+        
+        <!-- Completed tasks (collapsed section) -->
+        <div id="completed-section" class="completed-section">
+            <div class="completed-header">
+                <h3><i class="fas fa-check-circle"></i> Completed Tasks</h3>
+                <button id="toggle-completed" class="btn toggle-btn"><i class="fas fa-chevron-down"></i></button>
+            </div>
+            <ul id="completed-list" class="completed-list collapsed" aria-label="Completed tasks"></ul>
+        </div>
 
         <div class="action-buttons">
             <button id="clear-all-btn" class="btn delete-btn"><i class="fas fa-trash-alt"></i> Clear All Tasks</button>
@@ -154,11 +507,6 @@
             <div class="export-section">
                 <h3><i class="fas fa-file-export"></i> Export Tasks</h3>
                 <button id="copy-tasks-btn" class="btn copy-btn"><i class="fas fa-copy"></i> Copy All Tasks</button>
-            </div>
-            <div class="import-section">
-                <h3><i class="fas fa-file-import"></i> Import Tasks</h3>
-                <textarea id="import-tasks" placeholder="Paste your tasks here in any format..."></textarea>
-                <button id="import-tasks-btn" class="btn import-btn"><i class="fas fa-file-import"></i> Import Tasks</button>
             </div>
         </div>
     </div>
@@ -223,7 +571,7 @@
             const taskInput = document.getElementById('new-task');
             const addTaskBtn = document.getElementById('add-task-btn');
             const taskList = document.getElementById('task-list');
-            const filterSelect = document.getElementById('filter-tasks');
+            const completedList = document.getElementById('completed-list');
             const clearAllBtn = document.getElementById('clear-all-btn');
             const copyTasksBtn = document.getElementById('copy-tasks-btn');
             const importTasksArea = document.getElementById('import-tasks');
@@ -233,6 +581,21 @@
             const redoBtn = document.getElementById('redo-btn');
             const importExportToggle = document.getElementById('import-export-toggle');
             const importExportPanel = document.getElementById('import-export-panel');
+            const importExportDropdown = document.getElementById('import-export-dropdown');
+            const cancelImportBtn = document.getElementById('cancel-import-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const importBtn = document.getElementById('import-btn');
+            const importDialog = document.getElementById('import-dialog');
+            const closeModalBtn = document.querySelector('.close-modal');
+            const toggleCompletedBtn = document.getElementById('toggle-completed');
+            const completedSection = document.getElementById('completed-section');
+            const tabButtons = document.querySelectorAll('.tab-button');
+            
+            // Dashboard elements
+            const completedCount = document.getElementById('completed-count');
+            const pendingCount = document.getElementById('pending-count');
+            const totalCount = document.getElementById('total-count');
+            const completionRate = document.getElementById('completion-rate');
 
             updateDiagnostics('DOM elements referenced');
 
@@ -302,80 +665,154 @@
                 redoBtn.style.opacity = redoStack.length === 0 ? '0.5' : '1';
             }
 
+            // Update dashboard stats
+            function updateDashboard() {
+                const completed = tasks.filter(task => task.completed).length;
+                const total = tasks.length;
+                const pending = total - completed;
+                const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+                
+                completedCount.textContent = completed;
+                pendingCount.textContent = pending;
+                totalCount.textContent = total;
+                completionRate.textContent = `${rate}%`;
+            }
+            
+            // Set active tab
+            function setActiveTab(filterValue) {
+                tabButtons.forEach(button => {
+                    if (button.getAttribute('data-filter') === filterValue) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Get current filter from active tab
+            function getCurrentFilter() {
+                const activeTab = document.querySelector('.tab-button.active');
+                return activeTab ? activeTab.getAttribute('data-filter') : 'all';
+            }
+
             // Render tasks to the DOM
             function renderTasks() {
                 try {
-                    const currentFilter = filterSelect.value;
+                    // Clear both lists
                     taskList.innerHTML = '';
-
-                    let filteredTasks = [...tasks];
+                    completedList.innerHTML = '';
                     
-                    if (currentFilter === 'active') {
-                        filteredTasks = tasks.filter(task => !task.completed);
+                    const currentFilter = getCurrentFilter();
+                    
+                    // Separate active and completed tasks
+                    const activeTasks = tasks.filter(task => !task.completed);
+                    const completedTasks = tasks.filter(task => task.completed);
+                    
+                    // Determine which tasks to display based on filter
+                    let tasksToDisplay = [];
+                    
+                    if (currentFilter === 'all') {
+                        tasksToDisplay = activeTasks;
+                    } else if (currentFilter === 'active') {
+                        tasksToDisplay = activeTasks;
                     } else if (currentFilter === 'completed') {
-                        filteredTasks = tasks.filter(task => task.completed);
+                        tasksToDisplay = completedTasks;
                     }
 
-                    // Show message if no tasks match the filter
-                    if (filteredTasks.length === 0) {
+                    // Show message if no active tasks
+                    if (tasksToDisplay.length === 0 && currentFilter !== 'completed') {
                         const emptyMessage = document.createElement('div');
                         emptyMessage.className = 'empty-list';
                         emptyMessage.innerHTML = `
                             <i class="fas fa-clipboard-list"></i>
-                            <p>${tasks.length === 0 ? 'No tasks yet! Add your first task above.' : 'No tasks match the current filter.'}</p>
+                            <p>${tasks.length === 0 ? 'No tasks yet! Add your first task above.' : 'No active tasks found.'}</p>
                         `;
                         taskList.appendChild(emptyMessage);
-                        return;
+                    }
+                    
+                    // Always render active tasks in the main task list if not in completed filter
+                    if (currentFilter !== 'completed') {
+                        renderTasksList(tasksToDisplay, taskList);
+                    }
+                    
+                    // Always render completed tasks in the completed section
+                    renderTasksList(completedTasks, completedList);
+                    
+                    // Show/hide completed section based on if there are completed tasks
+                    completedSection.style.display = completedTasks.length > 0 ? 'block' : 'none';
+                    
+                    // Update dashboard
+                    updateDashboard();
+                    
+                    updateDiagnostics(`Rendered ${tasksToDisplay.length} tasks for current filter`);
+                } catch (e) {
+                    updateDiagnostics(`Error rendering tasks: ${e.message}`);
+                    console.error('Error rendering tasks:', e);
+                }
+            }
+            
+            // Helper function to render tasks to a specific list element
+            function renderTasksList(tasksArray, listElement) {
+                if (tasksArray.length === 0 && listElement === completedList) {
+                    const emptyMessage = document.createElement('li');
+                    emptyMessage.className = 'empty-item';
+                    emptyMessage.textContent = 'No completed tasks yet';
+                    listElement.appendChild(emptyMessage);
+                    return;
+                }
+                
+                tasksArray.forEach((task, index) => {
+                    const taskItem = document.createElement('li');
+                    taskItem.className = 'task-item';
+                    taskItem.setAttribute('data-id', task.id);
+                    taskItem.setAttribute('draggable', listElement !== completedList);
+                    
+                    taskItem.innerHTML = `
+                        <div class="task-content">
+                            ${listElement !== completedList ? 
+                                '<span class="drag-handle"><i class="fas fa-grip-lines"></i></span>' : 
+                                '<span class="completed-icon"><i class="fas fa-check-circle"></i></span>'
+                            }
+                            <input type="checkbox" class="task-complete" ${task.completed ? 'checked' : ''} 
+                                aria-label="${task.completed ? 'Mark as incomplete' : 'Mark as complete'}">
+                            <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
+                        </div>
+                        <div class="task-actions">
+                            ${!task.completed ? 
+                                '<button class="btn edit-task-btn" aria-label="Edit task" title="Edit task"><i class="fas fa-edit"></i></button>' : 
+                                ''
+                            }
+                            <button class="btn delete-task-btn" aria-label="Delete task" title="Delete task">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    `;
+
+                    listElement.appendChild(taskItem);
+
+                    // Add event listeners
+                    const checkbox = taskItem.querySelector('.task-complete');
+                    checkbox.addEventListener('change', () => toggleTaskCompletion(task.id));
+
+                    const deleteBtn = taskItem.querySelector('.delete-task-btn');
+                    deleteBtn.addEventListener('click', () => deleteTask(task.id));
+
+                    // Add edit button only for active tasks
+                    const editBtn = taskItem.querySelector('.edit-task-btn');
+                    if (editBtn) {
+                        editBtn.addEventListener('click', () => editTask(taskItem, task));
                     }
 
-                    filteredTasks.forEach((task, index) => {
-                        const taskItem = document.createElement('li');
-                        taskItem.className = 'task-item';
-                        taskItem.setAttribute('data-id', task.id);
-                        taskItem.setAttribute('draggable', 'true');
-                        
-                        taskItem.innerHTML = `
-                            <div class="task-content">
-                                <span class="drag-handle"><i class="fas fa-grip-lines"></i></span>
-                                <input type="checkbox" class="task-complete" ${task.completed ? 'checked' : ''} 
-                                    aria-label="${task.completed ? 'Mark as incomplete' : 'Mark as complete'}">
-                                <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
-                            </div>
-                            <div class="task-actions">
-                                <button class="btn edit-task-btn" aria-label="Edit task" title="Edit task">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn delete-task-btn" aria-label="Delete task" title="Delete task">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        `;
-
-                        taskList.appendChild(taskItem);
-
-                        // Add event listeners
-                        const checkbox = taskItem.querySelector('.task-complete');
-                        checkbox.addEventListener('change', () => toggleTaskCompletion(task.id));
-
-                        const deleteBtn = taskItem.querySelector('.delete-task-btn');
-                        deleteBtn.addEventListener('click', () => deleteTask(task.id));
-
-                        const editBtn = taskItem.querySelector('.edit-task-btn');
-                        editBtn.addEventListener('click', () => editTask(taskItem, task));
-
-                        // Drag and drop event listeners
+                    // Drag and drop event listeners only for active tasks
+                    if (listElement !== completedList) {
                         taskItem.addEventListener('dragstart', handleDragStart);
                         taskItem.addEventListener('dragend', handleDragEnd);
                         taskItem.addEventListener('dragover', handleDragOver);
                         taskItem.addEventListener('dragenter', handleDragEnter);
                         taskItem.addEventListener('dragleave', handleDragLeave);
                         taskItem.addEventListener('drop', handleDrop);
-                    });
-                    updateDiagnostics(`Rendered ${filteredTasks.length} tasks`);
-                } catch (e) {
-                    updateDiagnostics(`Error rendering tasks: ${e.message}`);
-                    console.error('Error rendering tasks:', e);
-                }
+                    }
+                });
             }
 
             // Drag and Drop Handlers
@@ -505,6 +942,13 @@
                 const task = tasks.find(t => t.id === id);
                 if (task) {
                     task.completed = !task.completed;
+                    
+                    // Don't automatically expand the completed section
+                    // Just show a notification that task was moved
+                    if (task.completed) {
+                        showToast('Task moved to completed section', 'success');
+                    }
+                    
                     saveTasks();
                     renderTasks();
                 }
@@ -572,7 +1016,7 @@
                 input.addEventListener('blur', saveEdit);
             }
 
-            // Copy tasks to clipboard
+            // Copy tasks to clipboard with categorization
             function copyTasks() {
                 if (tasks.length === 0) {
                     showToast('No tasks to copy.', 'error');
@@ -581,27 +1025,42 @@
                 
                 let textOutput = '📋 MY TASKS 📋\n\n';
                 
-                tasks.forEach((task, index) => {
-                    const checkbox = task.completed ? '☑' : '☐';
-                    textOutput += `${checkbox} ${task.text}\n`;
-                });
+                // Get active and completed tasks
+                const activeTasks = tasks.filter(task => !task.completed);
+                const completedTasks = tasks.filter(task => task.completed);
+                
+                // Active Tasks Section
+                textOutput += '✅ ACTIVE TASKS:\n';
+                if (activeTasks.length === 0) {
+                    textOutput += '  No active tasks\n';
+                } else {
+                    activeTasks.forEach((task, index) => {
+                        textOutput += `  ☐ ${task.text}\n`;
+                    });
+                }
+                
+                textOutput += '\n';
+                
+                // Completed Tasks Section
+                textOutput += '✓ COMPLETED TASKS:\n';
+                if (completedTasks.length === 0) {
+                    textOutput += '  No completed tasks\n';
+                } else {
+                    completedTasks.forEach((task, index) => {
+                        textOutput += `  ☑ ${task.text}\n`;
+                    });
+                }
                 
                 // Add a footer
-                textOutput += '\nExported from TaskMaster Pro - ' + new Date().toLocaleDateString();
+                textOutput += '\n----------------------------\n';
+                textOutput += 'Exported from TaskMaster Pro - ' + new Date().toLocaleDateString();
+                
+                // Close the dropdown if it's open
+                document.getElementById('import-export-dropdown').classList.remove('show');
                 
                 // Copy to clipboard
                 navigator.clipboard.writeText(textOutput)
                     .then(() => {
-                        // Show animation on copy button
-                        const copyBtn = document.getElementById('copy-tasks-btn');
-                        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                        copyBtn.style.backgroundColor = 'var(--success-color)';
-                        
-                        setTimeout(() => {
-                            copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy All Tasks';
-                            copyBtn.style.backgroundColor = '';
-                        }, 2000);
-                        
                         showToast('Tasks copied to clipboard!', 'success');
                     })
                     .catch(err => {
@@ -694,16 +1153,53 @@
                 }
             }
 
-            // Toggle import/export panel
-            function toggleImportExport() {
-                importExportPanel.classList.toggle('show');
+            // Toggle import/export dropdown
+            function toggleImportExport(e) {
+                e.stopPropagation();
+                const dropdown = document.getElementById('import-export-dropdown');
+                dropdown.classList.toggle('show');
                 
-                // Update button text
-                if (importExportPanel.classList.contains('show')) {
-                    importExportToggle.innerHTML = '<i class="fas fa-times"></i> Close Panel';
-                } else {
-                    importExportToggle.innerHTML = '<i class="fas fa-file-import"></i> Import/Export';
+                // Position the dropdown relative to the toggle button
+                if (dropdown.classList.contains('show')) {
+                    const rect = importExportToggle.getBoundingClientRect();
+                    dropdown.style.top = `${rect.bottom + window.scrollY}px`;
+                    dropdown.style.right = `${window.innerWidth - rect.right}px`;
                 }
+            }
+            
+            // Close dropdown when clicking elsewhere
+            function handleOutsideClick(e) {
+                const dropdown = document.getElementById('import-export-dropdown');
+                const toggle = document.getElementById('import-export-toggle');
+                
+                if (dropdown.classList.contains('show') && e.target !== toggle && !toggle.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.remove('show');
+                }
+            }
+            
+            // Show import dialog
+            function showImportDialog() {
+                importDialog.classList.add('show');
+                importTasksArea.focus();
+                // Close the dropdown
+                document.getElementById('import-export-dropdown').classList.remove('show');
+            }
+            
+            // Hide import dialog
+            function hideImportDialog() {
+                importDialog.classList.remove('show');
+                importTasksArea.value = '';
+            }
+            
+            // Toggle completed tasks section
+            function toggleCompletedSection() {
+                completedList.classList.toggle('collapsed');
+                toggleCompletedBtn.classList.toggle('expanded');
+                
+                const isExpanded = toggleCompletedBtn.classList.contains('expanded');
+                toggleCompletedBtn.innerHTML = isExpanded ? 
+                    '<i class="fas fa-chevron-up"></i>' : 
+                    '<i class="fas fa-chevron-down"></i>';
             }
 
             // Undo last action
@@ -776,6 +1272,7 @@
 
             // Event listeners
             try {
+                // Task addition
                 addTaskBtn.addEventListener('click', addTask);
                 updateDiagnostics('Added click listener to Add Task button');
                 
@@ -783,15 +1280,49 @@
                     if (e.key === 'Enter') addTask();
                 });
                 
+                // Clear tasks
                 clearAllBtn.addEventListener('click', clearAllTasks);
-                filterSelect.addEventListener('change', renderTasks);
                 
+                // Tab filtering
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        setActiveTab(button.getAttribute('data-filter'));
+                        renderTasks();
+                    });
+                });
+                
+                // Import/Export functionality
                 copyTasksBtn.addEventListener('click', copyTasks);
-                importTasksBtn.addEventListener('click', importTasks);
+                exportBtn.addEventListener('click', copyTasks);
+                importTasksBtn.addEventListener('click', () => {
+                    importTasks();
+                    hideImportDialog();
+                });
                 
-                themeToggle.addEventListener('click', toggleTheme);
+                // Cancel import button
+                document.getElementById('cancel-import-btn').addEventListener('click', hideImportDialog);
+                
                 importExportToggle.addEventListener('click', toggleImportExport);
+                importBtn.addEventListener('click', showImportDialog);
+                closeModalBtn.addEventListener('click', hideImportDialog);
                 
+                // Click outside modal to close
+                importDialog.addEventListener('click', (e) => {
+                    if (e.target === importDialog) {
+                        hideImportDialog();
+                    }
+                });
+                
+                // Close dropdown when clicking elsewhere
+                document.addEventListener('click', handleOutsideClick);
+                
+                // Completed tasks section
+                toggleCompletedBtn.addEventListener('click', toggleCompletedSection);
+                
+                // Theme toggle
+                themeToggle.addEventListener('click', toggleTheme);
+                
+                // Undo/Redo
                 undoBtn.addEventListener('click', undoAction);
                 redoBtn.addEventListener('click', redoAction);
                 
@@ -803,8 +1334,17 @@
 
             // Initialize app
             try {
+                // Load tasks
                 loadTasks();
                 updateUndoRedoButtons();
+                updateDashboard();
+                
+                // Set default filter
+                setActiveTab('all');
+                
+                // Hide options panels by default
+                document.getElementById('import-export-dropdown').classList.remove('show');
+                importDialog.classList.remove('show');
                 
                 // Check for dark theme preference
                 if (localStorage.getItem('dark-theme') === 'true') {
@@ -812,8 +1352,13 @@
                     themeToggle.querySelector('i').className = 'fas fa-sun';
                 }
                 
-                // Hide import/export panel by default
-                importExportPanel.classList.remove('show');
+                // Setup completed tasks section
+                const hasCompletedTasks = tasks.some(task => task.completed);
+                completedSection.style.display = hasCompletedTasks ? 'block' : 'none';
+                
+                // Always keep completed list collapsed by default
+                completedList.classList.add('collapsed');
+                toggleCompletedBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
                 
                 updateDiagnostics('App initialized successfully');
             } catch (e) {

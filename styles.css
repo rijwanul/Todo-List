@@ -205,7 +205,21 @@ input[type="text"], input[type="number"], textarea {
     border: 1px solid var(--border-color);
     gap: 0.75rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+#task-list .task-item {
     cursor: move;
+}
+
+#completed-list .task-item {
+    opacity: 0.8;
+    background-color: var(--bg-color);
+}
+
+.completed-icon {
+    color: var(--completed-color);
+    margin-right: 0.5rem;
 }
 
 .task-content {
