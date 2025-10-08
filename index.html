@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskMaster Pro | Advanced To-Do List</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="./styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2387/2387635.png" type="image/png">
+    <!-- Fix for GitHub Pages -->
+    <base href="."
 </head>
 <body>
     <div class="container">
@@ -59,6 +61,29 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="./script.js"></script>
+    <!-- Error handling for GitHub Pages debugging -->
+    <script>
+        window.addEventListener('error', function(e) {
+            console.error('Error caught:', e.message, 'at', e.filename, 'line', e.lineno);
+            if (!document.getElementById('error-display')) {
+                const errorDisplay = document.createElement('div');
+                errorDisplay.id = 'error-display';
+                errorDisplay.style.position = 'fixed';
+                errorDisplay.style.bottom = '10px';
+                errorDisplay.style.left = '10px';
+                errorDisplay.style.padding = '10px';
+                errorDisplay.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
+                errorDisplay.style.color = 'white';
+                errorDisplay.style.borderRadius = '5px';
+                errorDisplay.style.zIndex = '9999';
+                errorDisplay.style.maxWidth = '80%';
+                errorDisplay.style.display = 'none';
+                document.body.appendChild(errorDisplay);
+            }
+            document.getElementById('error-display').textContent = `Error: ${e.message}`;
+            document.getElementById('error-display').style.display = 'block';
+        });
+    </script>
 </body>
 </html>
