@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster Pro | Advanced To-Do List</title>
+    <!-- Dynamically handle styles for GitHub Pages -->
+    <script>
+        // Create and inject stylesheet
+        const linkElem = document.createElement('link');
+        linkElem.rel = 'stylesheet';
+        linkElem.href = './styles.css';
+        document.head.appendChild(linkElem);
+        
+        // Fallback in case the above doesn't work
+        setTimeout(function() {
+            // Check if styles were loaded correctly
+            const allStyles = document.styleSheets;
+            let stylesLoaded = false;
+            
+            for (let i = 0; i < allStyles.length; i++) {
+                try {
+                    if (allStyles[i].href && allStyles[i].href.includes('styles.css')) {
+                        stylesLoaded = true;
+                        break;
+                    }
+                } catch (e) {
+                    // Some browsers throw when accessing cross-domain stylesheets
+                }
+            }
+            
+            if (!stylesLoaded) {
+                console.warn('Styles not loaded. Trying alternative method...');
+                // Try alternative method - fetch and inject inline
+                fetch('./styles.css')
+                    .then(response => response.text())
+                    .then(css => {
+                        const styleElem = document.createElement('style');
+                        styleElem.textContent = css;
+                        document.head.appendChild(styleElem);
+                        console.log('Styles injected inline');
+                    })
+                    .catch(err => {
+                        console.error('Failed to load styles:', err);
+                        // Last resort - try different casing
+                        fetch('./Styles.css')
+                            .then(response => response.text())
+                            .then(css => {
+                                const styleElem = document.createElement('style');
+                                styleElem.textContent = css;
+                                document.head.appendChild(styleElem);
+                                console.log('Styles loaded with alternate casing');
+                            })
+                            .catch(err => console.error('All style loading attempts failed'));
+                    });
+            }
+        }, 1000);
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2387/2387635.png" type="image/png">
+    <!-- Critical CSS for immediate rendering -->
+    <style>
+        :root {
+            --primary-color: #5b21b6;
+            --primary-dark: #4c1d95;
+            --secondary-color: #ddd6fe;
+            --text-color: #1f2937;
+            --text-light: #6b7280;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+            --completed-color: #9ca3af;
+            --delete-color: #ef4444;
+            --success-color: #10b981;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid var(--accent-light);
+        }
+        
+        .btn {
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-check-square"></i> TaskMaster Pro</h1>
+            <button id="theme-toggle" class="btn theme-toggle" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="add-task-container">
+            <input type="text" id="new-task" placeholder="What needs to be done?" autofocus>
+            <button id="add-task-btn" class="btn add-btn"><i class="fas fa-plus"></i> Add Task</button>
+        </div>
+
+        <div class="filter-container">
+            <select id="filter-tasks" aria-label="Filter tasks">
+                <option value="all">All Tasks</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+            </select>
+            <button id="undo-btn" class="btn undo-btn" title="Undo last action" aria-label="Undo"><i class="fas fa-undo"></i></button>
+            <button id="redo-btn" class="btn redo-btn" title="Redo last action" aria-label="Redo"><i class="fas fa-redo"></i></button>
+            <button id="import-export-toggle" class="btn import-export-btn"><i class="fas fa-file-import"></i> Import/Export</button>
+        </div>
+
+        <div class="drag-instructions">
+            <i class="fas fa-info-circle"></i> Drag tasks to reorder them
+        </div>
+
+        <ul id="task-list" aria-label="Task list"></ul>
+
+        <div class="action-buttons">
+            <button id="clear-all-btn" class="btn delete-btn"><i class="fas fa-trash-alt"></i> Clear All Tasks</button>
+        </div>
+
+        <div id="import-export-panel" class="import-export-panel">
+            <div class="export-section">
+                <h3><i class="fas fa-file-export"></i> Export Tasks</h3>
+                <button id="copy-tasks-btn" class="btn copy-btn"><i class="fas fa-copy"></i> Copy All Tasks</button>
+            </div>
+            <div class="import-section">
+                <h3><i class="fas fa-file-import"></i> Import Tasks</h3>
+                <textarea id="import-tasks" placeholder="Paste your tasks here in any format..."></textarea>
+                <button id="import-tasks-btn" class="btn import-btn"><i class="fas fa-file-import"></i> Import Tasks</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Diagnostic panel for GitHub Pages -->
+    <div id="diagnostics-panel" style="position:fixed;bottom:10px;right:10px;background:rgba(0,0,0,0.8);color:white;padding:10px;border-radius:5px;font-size:12px;max-width:300px;z-index:9999;display:none;">
+        <h4 style="margin:0 0 5px 0;color:#f0f0f0;">Application Diagnostics</h4>
+        <div id="diagnostics-content">Initializing...</div>
+        <button id="hide-diagnostics" style="background:#333;border:1px solid #666;color:#fff;padding:2px 5px;margin-top:5px;cursor:pointer;">Hide</button>
+    </div>
+
+    <!-- Inline script for GitHub Pages compatibility -->
+    <script>
+        // Show diagnostics panel with Alt+D
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey && e.key === 'd') {
+                document.getElementById('diagnostics-panel').style.display = 'block';
+            }
+        });
+        
+        // Hide diagnostics panel
+        document.getElementById('hide-diagnostics').addEventListener('click', function() {
+            document.getElementById('diagnostics-panel').style.display = 'none';
+        });
+        
+        // Error handling
+        window.addEventListener('error', function(e) {
+            console.error('Error caught:', e.message, 'at', e.filename, 'line', e.lineno);
+            if (!document.getElementById('error-display')) {
+                const errorDisplay = document.createElement('div');
+                errorDisplay.id = 'error-display';
+                errorDisplay.style.position = 'fixed';
+                errorDisplay.style.bottom = '10px';
+                errorDisplay.style.left = '10px';
+                errorDisplay.style.padding = '10px';
+                errorDisplay.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
+                errorDisplay.style.color = 'white';
+                errorDisplay.style.borderRadius = '5px';
+                errorDisplay.style.zIndex = '9999';
+                errorDisplay.style.maxWidth = '80%';
+                errorDisplay.style.display = 'none';
+                document.body.appendChild(errorDisplay);
+            }
+            document.getElementById('error-display').textContent = `Error: ${e.message}`;
+            document.getElementById('error-display').style.display = 'block';
+        });
+
+        // Update diagnostics
+        function updateDiagnostics(message) {
+            const diagContent = document.getElementById('diagnostics-content');
+            const timestamp = new Date().toLocaleTimeString();
+            diagContent.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+        }
+        
+        updateDiagnostics('Using inline script');
+
+        // Application code - directly embedded
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDiagnostics('DOMContentLoaded event fired');
+            
+            // DOM elements
+            const taskInput = document.getElementById('new-task');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const taskList = document.getElementById('task-list');
+            const filterSelect = document.getElementById('filter-tasks');
+            const clearAllBtn = document.getElementById('clear-all-btn');
+            const copyTasksBtn = document.getElementById('copy-tasks-btn');
+            const importTasksArea = document.getElementById('import-tasks');
+            const importTasksBtn = document.getElementById('import-tasks-btn');
+            const themeToggle = document.getElementById('theme-toggle');
+            const undoBtn = document.getElementById('undo-btn');
+            const redoBtn = document.getElementById('redo-btn');
+            const importExportToggle = document.getElementById('import-export-toggle');
+            const importExportPanel = document.getElementById('import-export-panel');
+
+            updateDiagnostics('DOM elements referenced');
+
+            // App state
+            let tasks = [];
+            const undoStack = [];
+            const redoStack = [];
+            const MAX_STACK_SIZE = 20;
+            let draggedItem = null;
+
+            // Load tasks from localStorage
+            function loadTasks() {
+                try {
+                    const savedTasks = localStorage.getItem('tasks');
+                    if (savedTasks) {
+                        tasks = JSON.parse(savedTasks);
+                        renderTasks();
+                        updateDiagnostics(`Loaded ${tasks.length} tasks from localStorage`);
+                    } else {
+                        updateDiagnostics('No tasks found in localStorage');
+                    }
+                } catch (e) {
+                    updateDiagnostics(`Error loading tasks: ${e.message}`);
+                    console.error('Error loading tasks:', e);
+                }
+            }
+
+            // Save tasks to localStorage
+            function saveTasks() {
+                try {
+                    localStorage.setItem('tasks', JSON.stringify(tasks));
+                    updateDiagnostics(`Saved ${tasks.length} tasks to localStorage`);
+                } catch (e) {
+                    updateDiagnostics(`Error saving tasks: ${e.message}`);
+                    console.error('Error saving tasks:', e);
+                }
+            }
+
+            // Save app state for undo/redo functionality
+            function saveState(action) {
+                // Clone current state
+                const state = JSON.stringify(tasks);
+                
+                undoStack.push({
+                    state,
+                    action
+                });
+                
+                // Limit stack size
+                if (undoStack.length > MAX_STACK_SIZE) {
+                    undoStack.shift();
+                }
+                
+                // Clear redo stack on new action
+                redoStack.length = 0;
+                
+                // Update button states
+                updateUndoRedoButtons();
+            }
+
+            // Update undo/redo button states
+            function updateUndoRedoButtons() {
+                undoBtn.disabled = undoStack.length === 0;
+                redoBtn.disabled = redoStack.length === 0;
+                
+                undoBtn.style.opacity = undoStack.length === 0 ? '0.5' : '1';
+                redoBtn.style.opacity = redoStack.length === 0 ? '0.5' : '1';
+            }
+
+            // Render tasks to the DOM
+            function renderTasks() {
+                try {
+                    const currentFilter = filterSelect.value;
+                    taskList.innerHTML = '';
+
+                    let filteredTasks = [...tasks];
+                    
+                    if (currentFilter === 'active') {
+                        filteredTasks = tasks.filter(task => !task.completed);
+                    } else if (currentFilter === 'completed') {
+                        filteredTasks = tasks.filter(task => task.completed);
+                    }
+
+                    // Show message if no tasks match the filter
+                    if (filteredTasks.length === 0) {
+                        const emptyMessage = document.createElement('div');
+                        emptyMessage.className = 'empty-list';
+                        emptyMessage.innerHTML = `
+                            <i class="fas fa-clipboard-list"></i>
+                            <p>${tasks.length === 0 ? 'No tasks yet! Add your first task above.' : 'No tasks match the current filter.'}</p>
+                        `;
+                        taskList.appendChild(emptyMessage);
+                        return;
+                    }
+
+                    filteredTasks.forEach((task, index) => {
+                        const taskItem = document.createElement('li');
+                        taskItem.className = 'task-item';
+                        taskItem.setAttribute('data-id', task.id);
+                        taskItem.setAttribute('draggable', 'true');
+                        
+                        taskItem.innerHTML = `
+                            <div class="task-content">
+                                <span class="drag-handle"><i class="fas fa-grip-lines"></i></span>
+                                <input type="checkbox" class="task-complete" ${task.completed ? 'checked' : ''} 
+                                    aria-label="${task.completed ? 'Mark as incomplete' : 'Mark as complete'}">
+                                <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
+                            </div>
+                            <div class="task-actions">
+                                <button class="btn edit-task-btn" aria-label="Edit task" title="Edit task">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn delete-task-btn" aria-label="Delete task" title="Delete task">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        `;
+
+                        taskList.appendChild(taskItem);
+
+                        // Add event listeners
+                        const checkbox = taskItem.querySelector('.task-complete');
+                        checkbox.addEventListener('change', () => toggleTaskCompletion(task.id));
+
+                        const deleteBtn = taskItem.querySelector('.delete-task-btn');
+                        deleteBtn.addEventListener('click', () => deleteTask(task.id));
+
+                        const editBtn = taskItem.querySelector('.edit-task-btn');
+                        editBtn.addEventListener('click', () => editTask(taskItem, task));
+
+                        // Drag and drop event listeners
+                        taskItem.addEventListener('dragstart', handleDragStart);
+                        taskItem.addEventListener('dragend', handleDragEnd);
+                        taskItem.addEventListener('dragover', handleDragOver);
+                        taskItem.addEventListener('dragenter', handleDragEnter);
+                        taskItem.addEventListener('dragleave', handleDragLeave);
+                        taskItem.addEventListener('drop', handleDrop);
+                    });
+                    updateDiagnostics(`Rendered ${filteredTasks.length} tasks`);
+                } catch (e) {
+                    updateDiagnostics(`Error rendering tasks: ${e.message}`);
+                    console.error('Error rendering tasks:', e);
+                }
+            }
+
+            // Drag and Drop Handlers
+            function handleDragStart(e) {
+                draggedItem = this;
+                this.classList.add('dragging');
+                
+                // Required for Firefox
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', this.innerHTML);
+            }
+            
+            function handleDragEnd() {
+                this.classList.remove('dragging');
+                
+                const allItems = document.querySelectorAll('.task-item');
+                allItems.forEach(item => {
+                    item.classList.remove('drag-over');
+                });
+                
+                // Update task order after drag
+                updateTasksOrder();
+            }
+            
+            function handleDragOver(e) {
+                e.preventDefault();
+                return false;
+            }
+            
+            function handleDragEnter(e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            }
+            
+            function handleDragLeave() {
+                this.classList.remove('drag-over');
+            }
+            
+            function handleDrop(e) {
+                e.stopPropagation();
+                
+                // Don't do anything if dropped on the same element
+                if (draggedItem !== this) {
+                    // Get the position of elements
+                    const allItems = Array.from(taskList.querySelectorAll('.task-item'));
+                    const draggedIndex = allItems.indexOf(draggedItem);
+                    const targetIndex = allItems.indexOf(this);
+                    
+                    // Insert the dragged element
+                    if (draggedIndex < targetIndex) {
+                        this.parentNode.insertBefore(draggedItem, this.nextSibling);
+                    } else {
+                        this.parentNode.insertBefore(draggedItem, this);
+                    }
+                    
+                    // Save the state before updating order
+                    saveState('Reordered tasks');
+                    
+                    // Update the order of tasks in the tasks array
+                    updateTasksOrder();
+                }
+                
+                return false;
+            }
+            
+            // Update tasks order based on current DOM order
+            function updateTasksOrder() {
+                const allItems = document.querySelectorAll('.task-item');
+                
+                // Create a map for quick lookup
+                const tasksMap = {};
+                tasks.forEach(task => {
+                    tasksMap[task.id] = task;
+                });
+                
+                // Create new ordered array
+                const newTasksOrder = [];
+                
+                allItems.forEach(item => {
+                    const taskId = item.getAttribute('data-id');
+                    if (tasksMap[taskId]) {
+                        newTasksOrder.push(tasksMap[taskId]);
+                    }
+                });
+                
+                // Update tasks array with items that may not be in the DOM (due to filtering)
+                tasks.forEach(task => {
+                    if (!newTasksOrder.some(t => t.id === task.id)) {
+                        newTasksOrder.push(task);
+                    }
+                });
+                
+                // Replace tasks array with new ordered array
+                tasks = newTasksOrder;
+                
+                // Save the updated tasks
+                saveTasks();
+            }
+
+            // Add a new task
+            function addTask() {
+                const text = taskInput.value.trim();
+                if (!text) return;
+
+                saveState('Added task');
+
+                const newTask = {
+                    id: Date.now().toString(),
+                    text: text,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+
+                tasks.unshift(newTask); // Add to beginning
+                saveTasks();
+                renderTasks();
+
+                // Reset input fields
+                taskInput.value = '';
+                taskInput.focus();
+            }
+
+            // Toggle task completion
+            function toggleTaskCompletion(id) {
+                saveState('Toggled task completion');
+
+                const task = tasks.find(t => t.id === id);
+                if (task) {
+                    task.completed = !task.completed;
+                    saveTasks();
+                    renderTasks();
+                }
+            }
+
+            // Delete a task
+            function deleteTask(id) {
+                saveState('Deleted task');
+
+                tasks = tasks.filter(task => task.id !== id);
+                saveTasks();
+                renderTasks();
+            }
+
+            // Clear all tasks
+            function clearAllTasks() {
+                if (tasks.length === 0 || !confirm('Are you sure you want to delete all tasks?')) {
+                    return;
+                }
+
+                saveState('Cleared all tasks');
+
+                tasks = [];
+                saveTasks();
+                renderTasks();
+            }
+
+            // Edit a task
+            function editTask(taskElement, task) {
+                const taskTextEl = taskElement.querySelector('.task-text');
+                const currentText = task.text;
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentText;
+                input.className = 'edit-task-input';
+                
+                taskTextEl.innerHTML = '';
+                taskTextEl.appendChild(input);
+                input.focus();
+                
+                // Save on enter or blur
+                function saveEdit() {
+                    saveState('Edited task');
+                    
+                    const newText = input.value.trim();
+                    
+                    if (newText) {
+                        task.text = newText;
+                        saveTasks();
+                        renderTasks();
+                    } else {
+                        renderTasks(); // Just rerender if empty
+                    }
+                }
+                
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        saveEdit();
+                    } else if (e.key === 'Escape') {
+                        renderTasks(); // Cancel edit
+                    }
+                });
+                
+                input.addEventListener('blur', saveEdit);
+            }
+
+            // Copy tasks to clipboard
+            function copyTasks() {
+                if (tasks.length === 0) {
+                    showToast('No tasks to copy.', 'error');
+                    return;
+                }
+                
+                let textOutput = '📋 MY TASKS 📋\n\n';
+                
+                tasks.forEach((task, index) => {
+                    const checkbox = task.completed ? '☑' : '☐';
+                    textOutput += `${checkbox} ${task.text}\n`;
+                });
+                
+                // Add a footer
+                textOutput += '\nExported from TaskMaster Pro - ' + new Date().toLocaleDateString();
+                
+                // Copy to clipboard
+                navigator.clipboard.writeText(textOutput)
+                    .then(() => {
+                        // Show animation on copy button
+                        const copyBtn = document.getElementById('copy-tasks-btn');
+                        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                        copyBtn.style.backgroundColor = 'var(--success-color)';
+                        
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy All Tasks';
+                            copyBtn.style.backgroundColor = '';
+                        }, 2000);
+                        
+                        showToast('Tasks copied to clipboard!', 'success');
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy: ', err);
+                        // Fallback method
+                        const textarea = document.createElement('textarea');
+                        textarea.value = textOutput;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        showToast('Tasks copied to clipboard!', 'success');
+                    });
+            }
+
+            // Import tasks from text
+            function importTasks() {
+                const text = importTasksArea.value.trim();
+                if (!text) {
+                    showToast('Please paste some tasks to import.', 'error');
+                    return;
+                }
+                
+                saveState('Imported tasks');
+                
+                const lines = text.split('\n');
+                const newTasks = [];
+                
+                lines.forEach(line => {
+                    line = line.trim();
+                    if (!line || line.startsWith('📋') || line.startsWith('Exported from')) return;
+                    
+                    // Check for checkbox patterns like ☑, ☐, [x], [ ], - [ ], - [x], etc.
+                    const checkboxMatch = line.match(/^(?:[-*]?\s*(?:\[([x ])\]|([☑☐✓]))|([☑☐✓]))\s*/i);
+                    let isCompleted = false;
+                    
+                    if (checkboxMatch) {
+                        isCompleted = !!(checkboxMatch[1] === 'x' || checkboxMatch[2] === '☑' || checkboxMatch[2] === '✓' || 
+                                        checkboxMatch[3] === '☑' || checkboxMatch[3] === '✓');
+                        line = line.replace(/^[-*]?\s*(?:\[[x ]\]|[☑☐✓])\s*/i, '');
+                    }
+                    
+                    // Remove any order numbers like "1. Task"
+                    line = line.replace(/^\d+\.\s*/, '');
+                    
+                    line = line.trim();
+                    if (line) {
+                        newTasks.push({
+                            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                            text: line,
+                            completed: isCompleted,
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+                });
+                
+                if (newTasks.length === 0) {
+                    showToast('No valid tasks found in the imported text.', 'error');
+                    return;
+                }
+                
+                // Confirm before replacing or merging
+                const action = confirm(`Found ${newTasks.length} tasks. Click OK to add them to your existing tasks, or Cancel to replace all existing tasks.`);
+                
+                if (action) {
+                    // Merge with existing tasks
+                    tasks = [...newTasks, ...tasks];
+                } else {
+                    // Replace existing tasks
+                    tasks = newTasks;
+                }
+                
+                saveTasks();
+                renderTasks();
+                importTasksArea.value = '';
+                showToast(`Successfully imported ${newTasks.length} tasks!`, 'success');
+            }
+
+            // Toggle theme
+            function toggleTheme() {
+                document.body.classList.toggle('dark-theme');
+                const isDark = document.body.classList.contains('dark-theme');
+                localStorage.setItem('dark-theme', isDark);
+                
+                const icon = themeToggle.querySelector('i');
+                if (isDark) {
+                    icon.className = 'fas fa-sun';
+                } else {
+                    icon.className = 'fas fa-moon';
+                }
+            }
+
+            // Toggle import/export panel
+            function toggleImportExport() {
+                importExportPanel.classList.toggle('show');
+                
+                // Update button text
+                if (importExportPanel.classList.contains('show')) {
+                    importExportToggle.innerHTML = '<i class="fas fa-times"></i> Close Panel';
+                } else {
+                    importExportToggle.innerHTML = '<i class="fas fa-file-import"></i> Import/Export';
+                }
+            }
+
+            // Undo last action
+            function undoAction() {
+                if (undoStack.length === 0) return;
+                
+                const lastState = undoStack.pop();
+                
+                // Save current state to redo stack
+                redoStack.push({
+                    state: JSON.stringify(tasks),
+                    action: 'Redo ' + lastState.action
+                });
+                
+                // Restore previous state
+                tasks = JSON.parse(lastState.state);
+                saveTasks();
+                renderTasks();
+                
+                updateUndoRedoButtons();
+            }
+
+            // Redo last undone action
+            function redoAction() {
+                if (redoStack.length === 0) return;
+                
+                const nextState = redoStack.pop();
+                
+                // Save current state to undo stack
+                undoStack.push({
+                    state: JSON.stringify(tasks),
+                    action: 'Undo ' + nextState.action
+                });
+                
+                // Restore next state
+                tasks = JSON.parse(nextState.state);
+                saveTasks();
+                renderTasks();
+                
+                updateUndoRedoButtons();
+            }
+
+            // Show toast notification
+            function showToast(message, type = '') {
+                // Remove existing toast if any
+                const existingToast = document.querySelector('.toast');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+                
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                
+                // Trigger animation
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 10);
+                
+                // Auto remove after 3 seconds
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                }, 3000);
+            }
+
+            // Event listeners
+            try {
+                addTaskBtn.addEventListener('click', addTask);
+                updateDiagnostics('Added click listener to Add Task button');
+                
+                taskInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') addTask();
+                });
+                
+                clearAllBtn.addEventListener('click', clearAllTasks);
+                filterSelect.addEventListener('change', renderTasks);
+                
+                copyTasksBtn.addEventListener('click', copyTasks);
+                importTasksBtn.addEventListener('click', importTasks);
+                
+                themeToggle.addEventListener('click', toggleTheme);
+                importExportToggle.addEventListener('click', toggleImportExport);
+                
+                undoBtn.addEventListener('click', undoAction);
+                redoBtn.addEventListener('click', redoAction);
+                
+                updateDiagnostics('All event listeners added successfully');
+            } catch (e) {
+                updateDiagnostics(`Error setting up event listeners: ${e.message}`);
+                console.error('Error setting up event listeners:', e);
+            }
+
+            // Initialize app
+            try {
+                loadTasks();
+                updateUndoRedoButtons();
+                
+                // Check for dark theme preference
+                if (localStorage.getItem('dark-theme') === 'true') {
+                    document.body.classList.add('dark-theme');
+                    themeToggle.querySelector('i').className = 'fas fa-sun';
+                }
+                
+                // Hide import/export panel by default
+                importExportPanel.classList.remove('show');
+                
+                updateDiagnostics('App initialized successfully');
+            } catch (e) {
+                updateDiagnostics(`Error initializing app: ${e.message}`);
+                console.error('Error initializing app:', e);
+            }
+        });
+    </script>
+</body>
+</html>

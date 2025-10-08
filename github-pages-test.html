@@ -60,6 +60,14 @@
     </div>
 
     <div class="test-card">
+        <h2>Script Execution Test</h2>
+        <p>Testing if script content can be executed:</p>
+        <button id="execute-test-btn">Execute Test Script</button>
+        <p id="execution-result">Not tested yet</p>
+        <pre id="execution-details" style="background:#f0f0f0;padding:10px;display:none;"></pre>
+    </div>
+
+    <div class="test-card">
         <h2>File Path Test</h2>
         <p>Testing if we can find the main files:</p>
         <ul id="file-test-results">
@@ -95,6 +103,44 @@
         document.getElementById('js-test-btn').addEventListener('click', function() {
             document.getElementById('js-result').innerHTML = 
                 '<span class="success">✓ JavaScript is working correctly!</span>';
+        });
+        
+        // Script execution test
+        document.getElementById('execute-test-btn').addEventListener('click', function() {
+            try {
+                // Try creating a dynamic script element and executing code
+                const testScript = document.createElement('script');
+                testScript.textContent = `
+                    (function() {
+                        const testResult = document.getElementById('execution-result');
+                        const testDetails = document.getElementById('execution-details');
+                        
+                        testResult.innerHTML = '<span class="success">✓ Script execution works!</span>';
+                        
+                        // Test localStorage
+                        try {
+                            localStorage.setItem('test-key', 'test-value');
+                            const storedValue = localStorage.getItem('test-key');
+                            if (storedValue === 'test-value') {
+                                testDetails.innerHTML += '\\nLocalStorage: Working correctly';
+                            } else {
+                                testDetails.innerHTML += '\\nLocalStorage: Not working as expected';
+                            }
+                        } catch(e) {
+                            testDetails.innerHTML += '\\nLocalStorage Error: ' + e.message;
+                        }
+                        
+                        // Show details
+                        testDetails.style.display = 'block';
+                    })();
+                `;
+                document.body.appendChild(testScript);
+            } catch(e) {
+                document.getElementById('execution-result').innerHTML = 
+                    '<span class="failure">✗ Script execution failed: ' + e.message + '</span>';
+                document.getElementById('execution-details').style.display = 'block';
+                document.getElementById('execution-details').textContent = e.stack;
+            }
         });
 
         // File path tests

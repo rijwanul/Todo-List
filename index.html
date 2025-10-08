@@ -162,10 +162,28 @@
             </div>
         </div>
     </div>
+    
+    <!-- Diagnostic panel for GitHub Pages -->
+    <div id="diagnostics-panel" style="position:fixed;bottom:10px;right:10px;background:rgba(0,0,0,0.8);color:white;padding:10px;border-radius:5px;font-size:12px;max-width:300px;z-index:9999;display:none;">
+        <h4 style="margin:0 0 5px 0;color:#f0f0f0;">Application Diagnostics</h4>
+        <div id="diagnostics-content">Initializing...</div>
+        <button id="hide-diagnostics" style="background:#333;border:1px solid #666;color:#fff;padding:2px 5px;margin-top:5px;cursor:pointer;">Hide</button>
+    </div>
 
-    <script src="./script.js"></script>
     <!-- Error handling for GitHub Pages debugging -->
     <script>
+        // Show diagnostics panel with Alt+D
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey && e.key === 'd') {
+                document.getElementById('diagnostics-panel').style.display = 'block';
+            }
+        });
+        
+        // Hide diagnostics panel
+        document.getElementById('hide-diagnostics').addEventListener('click', function() {
+            document.getElementById('diagnostics-panel').style.display = 'none';
+        });
+        
         window.addEventListener('error', function(e) {
             console.error('Error caught:', e.message, 'at', e.filename, 'line', e.lineno);
             if (!document.getElementById('error-display')) {
@@ -186,6 +204,106 @@
             document.getElementById('error-display').textContent = `Error: ${e.message}`;
             document.getElementById('error-display').style.display = 'block';
         });
+
+        // Robust script loading for GitHub Pages
+        function loadScript(url, callback) {
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            
+            if (script.readyState) { // For old IE
+                script.onreadystatechange = function() {
+                    if (script.readyState === 'loaded' || script.readyState === 'complete') {
+                        script.onreadystatechange = null;
+                        callback();
+                    }
+                };
+            } else {
+                script.onload = function() {
+                    callback();
+                };
+            }
+            
+            script.src = url;
+            document.body.appendChild(script);
+        }
+        
+        // Update diagnostics
+        function updateDiagnostics(message) {
+            const diagContent = document.getElementById('diagnostics-content');
+            const timestamp = new Date().toLocaleTimeString();
+            diagContent.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+        }
+        
+        updateDiagnostics('Starting script loading...');
+        
+        // Try to load the script with proper error handling
+        loadScript('./script.js', function() {
+            console.log('Main script loaded successfully');
+            updateDiagnostics('Script loaded via script tag');
+        });
+        
+        // Backup approach - fetch and evaluate the script
+        setTimeout(function() {
+            // Check if our event listeners have been set up (indicating the script loaded)
+            const addTaskBtn = document.getElementById('add-task-btn');
+            updateDiagnostics('Checking if event handlers were set up...');
+            if (!addTaskBtn || !addTaskBtn.onclick) {
+                updateDiagnostics('Event handlers not found, trying alternative loading...');
+                console.warn('Script may not have loaded properly, trying alternative method...');
+                
+                fetch('./script.js')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch script: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(jsContent => {
+                        console.log('Script fetched successfully, evaluating...');
+                        // Add a note to the code before evaluating it
+                        const scriptContent = `
+                        // This script was loaded via fetch and eval due to loading issues
+                        // Original script: script.js
+                        ${jsContent}
+                        `;
+                        
+                        // Create a script element for better debugging
+                        const scriptElem = document.createElement('script');
+                        scriptElem.textContent = scriptContent;
+                        document.body.appendChild(scriptElem);
+                        
+                        console.log('Script evaluated');
+                        updateDiagnostics('Script loaded and evaluated via fetch');
+                    })
+                    .catch(err => {
+                        console.error('Failed to load script via fetch:', err);
+                        updateDiagnostics(`Error loading script: ${err.message}`);
+                        // Try with different casing as last resort
+                        fetch('./Script.js')
+                            .then(response => response.text())
+                            .then(jsContent => {
+                                const scriptElem = document.createElement('script');
+                                scriptElem.textContent = jsContent;
+                                document.body.appendChild(scriptElem);
+                                console.log('Script loaded with alternate casing');
+                            })
+                            .catch(() => {
+                                // If all else fails, show error to user
+                                const errorMsg = document.createElement('div');
+                                errorMsg.style.padding = '20px';
+                                errorMsg.style.margin = '20px auto';
+                                errorMsg.style.backgroundColor = '#f8d7da';
+                                errorMsg.style.color = '#721c24';
+                                errorMsg.style.borderRadius = '5px';
+                                errorMsg.style.textAlign = 'center';
+                                errorMsg.innerHTML = `<h3>Error Loading Application</h3>
+                                <p>Failed to load the application script. This may be due to network issues or deployment configuration.</p>
+                                <p>Try refreshing the page or contact the website administrator.</p>`;
+                                document.querySelector('.container').prepend(errorMsg);
+                            });
+                    });
+            }
+        }, 2000);
     </script>
 </body>
 </html>
