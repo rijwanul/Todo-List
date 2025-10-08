@@ -99,7 +99,10 @@
 
         // File path tests
         function testFileExists(url, elementId) {
-            fetch(url, { method: 'HEAD' })
+            fetch(url, { 
+                method: 'GET',
+                cache: 'no-store' // Bypass cache for accurate testing
+            })
                 .then(response => {
                     if (response.ok) {
                         document.getElementById(elementId).innerHTML = 
@@ -112,6 +115,18 @@
                 .catch(error => {
                     document.getElementById(elementId).innerHTML = 
                         '<span class="failure">✗ Error: ' + error.message + '</span>';
+                        
+                    // If styles.css fails, try alternate casing
+                    if (url.includes('styles.css')) {
+                        fetch('./Styles.css', { method: 'GET', cache: 'no-store' })
+                            .then(response => {
+                                if (response.ok) {
+                                    document.getElementById(elementId).innerHTML = 
+                                        '<span class="success">✓ Found with alternate casing (Styles.css)</span>';
+                                }
+                            })
+                            .catch(() => {});
+                    }
                 });
         }
 

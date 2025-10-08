@@ -4,14 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskMaster Pro | Advanced To-Do List</title>
-    <link rel="stylesheet" href="./styles.css">
+    <!-- Dynamically handle styles for GitHub Pages -->
+    <script>
+        // Create and inject stylesheet
+        const linkElem = document.createElement('link');
+        linkElem.rel = 'stylesheet';
+        linkElem.href = './styles.css';
+        document.head.appendChild(linkElem);
+        
+        // Fallback in case the above doesn't work
+        setTimeout(function() {
+            // Check if styles were loaded correctly
+            const allStyles = document.styleSheets;
+            let stylesLoaded = false;
+            
+            for (let i = 0; i < allStyles.length; i++) {
+                try {
+                    if (allStyles[i].href && allStyles[i].href.includes('styles.css')) {
+                        stylesLoaded = true;
+                        break;
+                    }
+                } catch (e) {
+                    // Some browsers throw when accessing cross-domain stylesheets
+                }
+            }
+            
+            if (!stylesLoaded) {
+                console.warn('Styles not loaded. Trying alternative method...');
+                // Try alternative method - fetch and inject inline
+                fetch('./styles.css')
+                    .then(response => response.text())
+                    .then(css => {
+                        const styleElem = document.createElement('style');
+                        styleElem.textContent = css;
+                        document.head.appendChild(styleElem);
+                        console.log('Styles injected inline');
+                    })
+                    .catch(err => {
+                        console.error('Failed to load styles:', err);
+                        // Last resort - try different casing
+                        fetch('./Styles.css')
+                            .then(response => response.text())
+                            .then(css => {
+                                const styleElem = document.createElement('style');
+                                styleElem.textContent = css;
+                                document.head.appendChild(styleElem);
+                                console.log('Styles loaded with alternate casing');
+                            })
+                            .catch(err => console.error('All style loading attempts failed'));
+                    });
+            }
+        }, 1000);
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2387/2387635.png" type="image/png">
-    <!-- Fix for GitHub Pages -->
-    <base href="."
 </head>
 <body>
     <div class="container">
