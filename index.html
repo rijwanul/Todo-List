@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster Pro | Advanced To-Do List</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2387/2387635.png" type="image/png">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-check-square"></i> TaskMaster Pro</h1>
+            <button id="theme-toggle" class="btn theme-toggle" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="add-task-container">
+            <input type="text" id="new-task" placeholder="What needs to be done?" autofocus>
+            <button id="add-task-btn" class="btn add-btn"><i class="fas fa-plus"></i> Add Task</button>
+        </div>
+
+        <div class="filter-container">
+            <select id="filter-tasks" aria-label="Filter tasks">
+                <option value="all">All Tasks</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+            </select>
+            <button id="undo-btn" class="btn undo-btn" title="Undo last action" aria-label="Undo"><i class="fas fa-undo"></i></button>
+            <button id="redo-btn" class="btn redo-btn" title="Redo last action" aria-label="Redo"><i class="fas fa-redo"></i></button>
+            <button id="import-export-toggle" class="btn import-export-btn"><i class="fas fa-file-import"></i> Import/Export</button>
+        </div>
+
+        <div class="drag-instructions">
+            <i class="fas fa-info-circle"></i> Drag tasks to reorder them
+        </div>
+
+        <ul id="task-list" aria-label="Task list"></ul>
+
+        <div class="action-buttons">
+            <button id="clear-all-btn" class="btn delete-btn"><i class="fas fa-trash-alt"></i> Clear All Tasks</button>
+        </div>
+
+        <div id="import-export-panel" class="import-export-panel">
+            <div class="export-section">
+                <h3><i class="fas fa-file-export"></i> Export Tasks</h3>
+                <button id="copy-tasks-btn" class="btn copy-btn"><i class="fas fa-copy"></i> Copy All Tasks</button>
+            </div>
+            <div class="import-section">
+                <h3><i class="fas fa-file-import"></i> Import Tasks</h3>
+                <textarea id="import-tasks" placeholder="Paste your tasks here in any format..."></textarea>
+                <button id="import-tasks-btn" class="btn import-btn"><i class="fas fa-file-import"></i> Import Tasks</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
