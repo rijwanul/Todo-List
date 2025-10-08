@@ -1,0 +1,132 @@
+<!-- This file helps test if GitHub Pages is serving files correctly -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Pages Test</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #5b21b6;
+        }
+        .test-card {
+            background: #f0f0f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success {
+            color: green;
+        }
+        .failure {
+            color: red;
+        }
+        button {
+            padding: 8px 16px;
+            background: #5b21b6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>GitHub Pages Connection Test</h1>
+    
+    <div class="test-card">
+        <h2>Page Loaded Successfully</h2>
+        <p>If you can see this, HTML content is being served correctly.</p>
+    </div>
+
+    <div class="test-card">
+        <h2>CSS Test</h2>
+        <p>The text below should be purple if CSS is loading correctly:</p>
+        <p><span id="css-test">This text should be purple.</span></p>
+        <div id="css-result"></div>
+    </div>
+
+    <div class="test-card">
+        <h2>JavaScript Test</h2>
+        <p>Click the button to test if JavaScript is working:</p>
+        <button id="js-test-btn">Test JavaScript</button>
+        <p id="js-result"></p>
+    </div>
+
+    <div class="test-card">
+        <h2>File Path Test</h2>
+        <p>Testing if we can find the main files:</p>
+        <ul id="file-test-results">
+            <li>index.html: <span id="index-result">Checking...</span></li>
+            <li>styles.css: <span id="css-result">Checking...</span></li>
+            <li>script.js: <span id="js-result-file">Checking...</span></li>
+        </ul>
+    </div>
+
+    <div class="test-card">
+        <h2>Environment Information</h2>
+        <pre id="env-info"></pre>
+    </div>
+
+    <p><a href="./index.html">Go to the main application</a></p>
+
+    <script>
+        // Style test
+        document.getElementById('css-test').style.color = 'purple';
+        
+        // Check if our style was applied
+        const testElement = document.getElementById('css-test');
+        const computedStyle = window.getComputedStyle(testElement);
+        if (computedStyle.color === 'rgb(128, 0, 128)' || computedStyle.color.includes('purple')) {
+            document.getElementById('css-result').innerHTML = 
+                '<span class="success">✓ CSS is working correctly</span>';
+        } else {
+            document.getElementById('css-result').innerHTML = 
+                '<span class="failure">✗ CSS might not be working correctly</span>';
+        }
+
+        // JavaScript test
+        document.getElementById('js-test-btn').addEventListener('click', function() {
+            document.getElementById('js-result').innerHTML = 
+                '<span class="success">✓ JavaScript is working correctly!</span>';
+        });
+
+        // File path tests
+        function testFileExists(url, elementId) {
+            fetch(url, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById(elementId).innerHTML = 
+                            '<span class="success">✓ Found</span>';
+                    } else {
+                        document.getElementById(elementId).innerHTML = 
+                            '<span class="failure">✗ Not found (status: ' + response.status + ')</span>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById(elementId).innerHTML = 
+                        '<span class="failure">✗ Error: ' + error.message + '</span>';
+                });
+        }
+
+        // Test for main files
+        testFileExists('./index.html', 'index-result');
+        testFileExists('./styles.css', 'css-result');
+        testFileExists('./script.js', 'js-result-file');
+
+        // Environment info
+        document.getElementById('env-info').textContent = 
+            'URL: ' + window.location.href + '\n' +
+            'Origin: ' + window.location.origin + '\n' +
+            'Pathname: ' + window.location.pathname + '\n' +
+            'Base URI: ' + document.baseURI + '\n' +
+            'User Agent: ' + navigator.userAgent;
+    </script>
+</body>
+</html>
