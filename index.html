@@ -170,7 +170,7 @@
         <button id="hide-diagnostics" style="background:#333;border:1px solid #666;color:#fff;padding:2px 5px;margin-top:5px;cursor:pointer;">Hide</button>
     </div>
 
-    <!-- Error handling for GitHub Pages debugging -->
+    <!-- Inline script for GitHub Pages compatibility -->
     <script>
         // Show diagnostics panel with Alt+D
         document.addEventListener('keydown', function(e) {
@@ -184,6 +184,7 @@
             document.getElementById('diagnostics-panel').style.display = 'none';
         });
         
+        // Error handling
         window.addEventListener('error', function(e) {
             console.error('Error caught:', e.message, 'at', e.filename, 'line', e.lineno);
             if (!document.getElementById('error-display')) {
@@ -205,28 +206,6 @@
             document.getElementById('error-display').style.display = 'block';
         });
 
-        // Robust script loading for GitHub Pages
-        function loadScript(url, callback) {
-            const script = document.createElement('script');
-            script.type = 'text/javascript';
-            
-            if (script.readyState) { // For old IE
-                script.onreadystatechange = function() {
-                    if (script.readyState === 'loaded' || script.readyState === 'complete') {
-                        script.onreadystatechange = null;
-                        callback();
-                    }
-                };
-            } else {
-                script.onload = function() {
-                    callback();
-                };
-            }
-            
-            script.src = url;
-            document.body.appendChild(script);
-        }
-        
         // Update diagnostics
         function updateDiagnostics(message) {
             const diagContent = document.getElementById('diagnostics-content');
@@ -234,76 +213,614 @@
             diagContent.innerHTML += `<div>[${timestamp}] ${message}</div>`;
         }
         
-        updateDiagnostics('Starting script loading...');
-        
-        // Try to load the script with proper error handling
-        loadScript('./script.js', function() {
-            console.log('Main script loaded successfully');
-            updateDiagnostics('Script loaded via script tag');
-        });
-        
-        // Backup approach - fetch and evaluate the script
-        setTimeout(function() {
-            // Check if our event listeners have been set up (indicating the script loaded)
+        updateDiagnostics('Using inline script');
+
+        // Application code - directly embedded
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDiagnostics('DOMContentLoaded event fired');
+            
+            // DOM elements
+            const taskInput = document.getElementById('new-task');
             const addTaskBtn = document.getElementById('add-task-btn');
-            updateDiagnostics('Checking if event handlers were set up...');
-            if (!addTaskBtn || !addTaskBtn.onclick) {
-                updateDiagnostics('Event handlers not found, trying alternative loading...');
-                console.warn('Script may not have loaded properly, trying alternative method...');
+            const taskList = document.getElementById('task-list');
+            const filterSelect = document.getElementById('filter-tasks');
+            const clearAllBtn = document.getElementById('clear-all-btn');
+            const copyTasksBtn = document.getElementById('copy-tasks-btn');
+            const importTasksArea = document.getElementById('import-tasks');
+            const importTasksBtn = document.getElementById('import-tasks-btn');
+            const themeToggle = document.getElementById('theme-toggle');
+            const undoBtn = document.getElementById('undo-btn');
+            const redoBtn = document.getElementById('redo-btn');
+            const importExportToggle = document.getElementById('import-export-toggle');
+            const importExportPanel = document.getElementById('import-export-panel');
+
+            updateDiagnostics('DOM elements referenced');
+
+            // App state
+            let tasks = [];
+            const undoStack = [];
+            const redoStack = [];
+            const MAX_STACK_SIZE = 20;
+            let draggedItem = null;
+
+            // Load tasks from localStorage
+            function loadTasks() {
+                try {
+                    const savedTasks = localStorage.getItem('tasks');
+                    if (savedTasks) {
+                        tasks = JSON.parse(savedTasks);
+                        renderTasks();
+                        updateDiagnostics(`Loaded ${tasks.length} tasks from localStorage`);
+                    } else {
+                        updateDiagnostics('No tasks found in localStorage');
+                    }
+                } catch (e) {
+                    updateDiagnostics(`Error loading tasks: ${e.message}`);
+                    console.error('Error loading tasks:', e);
+                }
+            }
+
+            // Save tasks to localStorage
+            function saveTasks() {
+                try {
+                    localStorage.setItem('tasks', JSON.stringify(tasks));
+                    updateDiagnostics(`Saved ${tasks.length} tasks to localStorage`);
+                } catch (e) {
+                    updateDiagnostics(`Error saving tasks: ${e.message}`);
+                    console.error('Error saving tasks:', e);
+                }
+            }
+
+            // Save app state for undo/redo functionality
+            function saveState(action) {
+                // Clone current state
+                const state = JSON.stringify(tasks);
                 
-                fetch('./script.js')
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`Failed to fetch script: ${response.status}`);
-                        }
-                        return response.text();
-                    })
-                    .then(jsContent => {
-                        console.log('Script fetched successfully, evaluating...');
-                        // Add a note to the code before evaluating it
-                        const scriptContent = `
-                        // This script was loaded via fetch and eval due to loading issues
-                        // Original script: script.js
-                        ${jsContent}
+                undoStack.push({
+                    state,
+                    action
+                });
+                
+                // Limit stack size
+                if (undoStack.length > MAX_STACK_SIZE) {
+                    undoStack.shift();
+                }
+                
+                // Clear redo stack on new action
+                redoStack.length = 0;
+                
+                // Update button states
+                updateUndoRedoButtons();
+            }
+
+            // Update undo/redo button states
+            function updateUndoRedoButtons() {
+                undoBtn.disabled = undoStack.length === 0;
+                redoBtn.disabled = redoStack.length === 0;
+                
+                undoBtn.style.opacity = undoStack.length === 0 ? '0.5' : '1';
+                redoBtn.style.opacity = redoStack.length === 0 ? '0.5' : '1';
+            }
+
+            // Render tasks to the DOM
+            function renderTasks() {
+                try {
+                    const currentFilter = filterSelect.value;
+                    taskList.innerHTML = '';
+
+                    let filteredTasks = [...tasks];
+                    
+                    if (currentFilter === 'active') {
+                        filteredTasks = tasks.filter(task => !task.completed);
+                    } else if (currentFilter === 'completed') {
+                        filteredTasks = tasks.filter(task => task.completed);
+                    }
+
+                    // Show message if no tasks match the filter
+                    if (filteredTasks.length === 0) {
+                        const emptyMessage = document.createElement('div');
+                        emptyMessage.className = 'empty-list';
+                        emptyMessage.innerHTML = `
+                            <i class="fas fa-clipboard-list"></i>
+                            <p>${tasks.length === 0 ? 'No tasks yet! Add your first task above.' : 'No tasks match the current filter.'}</p>
                         `;
+                        taskList.appendChild(emptyMessage);
+                        return;
+                    }
+
+                    filteredTasks.forEach((task, index) => {
+                        const taskItem = document.createElement('li');
+                        taskItem.className = 'task-item';
+                        taskItem.setAttribute('data-id', task.id);
+                        taskItem.setAttribute('draggable', 'true');
                         
-                        // Create a script element for better debugging
-                        const scriptElem = document.createElement('script');
-                        scriptElem.textContent = scriptContent;
-                        document.body.appendChild(scriptElem);
+                        taskItem.innerHTML = `
+                            <div class="task-content">
+                                <span class="drag-handle"><i class="fas fa-grip-lines"></i></span>
+                                <input type="checkbox" class="task-complete" ${task.completed ? 'checked' : ''} 
+                                    aria-label="${task.completed ? 'Mark as incomplete' : 'Mark as complete'}">
+                                <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
+                            </div>
+                            <div class="task-actions">
+                                <button class="btn edit-task-btn" aria-label="Edit task" title="Edit task">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn delete-task-btn" aria-label="Delete task" title="Delete task">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        `;
+
+                        taskList.appendChild(taskItem);
+
+                        // Add event listeners
+                        const checkbox = taskItem.querySelector('.task-complete');
+                        checkbox.addEventListener('change', () => toggleTaskCompletion(task.id));
+
+                        const deleteBtn = taskItem.querySelector('.delete-task-btn');
+                        deleteBtn.addEventListener('click', () => deleteTask(task.id));
+
+                        const editBtn = taskItem.querySelector('.edit-task-btn');
+                        editBtn.addEventListener('click', () => editTask(taskItem, task));
+
+                        // Drag and drop event listeners
+                        taskItem.addEventListener('dragstart', handleDragStart);
+                        taskItem.addEventListener('dragend', handleDragEnd);
+                        taskItem.addEventListener('dragover', handleDragOver);
+                        taskItem.addEventListener('dragenter', handleDragEnter);
+                        taskItem.addEventListener('dragleave', handleDragLeave);
+                        taskItem.addEventListener('drop', handleDrop);
+                    });
+                    updateDiagnostics(`Rendered ${filteredTasks.length} tasks`);
+                } catch (e) {
+                    updateDiagnostics(`Error rendering tasks: ${e.message}`);
+                    console.error('Error rendering tasks:', e);
+                }
+            }
+
+            // Drag and Drop Handlers
+            function handleDragStart(e) {
+                draggedItem = this;
+                this.classList.add('dragging');
+                
+                // Required for Firefox
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', this.innerHTML);
+            }
+            
+            function handleDragEnd() {
+                this.classList.remove('dragging');
+                
+                const allItems = document.querySelectorAll('.task-item');
+                allItems.forEach(item => {
+                    item.classList.remove('drag-over');
+                });
+                
+                // Update task order after drag
+                updateTasksOrder();
+            }
+            
+            function handleDragOver(e) {
+                e.preventDefault();
+                return false;
+            }
+            
+            function handleDragEnter(e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            }
+            
+            function handleDragLeave() {
+                this.classList.remove('drag-over');
+            }
+            
+            function handleDrop(e) {
+                e.stopPropagation();
+                
+                // Don't do anything if dropped on the same element
+                if (draggedItem !== this) {
+                    // Get the position of elements
+                    const allItems = Array.from(taskList.querySelectorAll('.task-item'));
+                    const draggedIndex = allItems.indexOf(draggedItem);
+                    const targetIndex = allItems.indexOf(this);
+                    
+                    // Insert the dragged element
+                    if (draggedIndex < targetIndex) {
+                        this.parentNode.insertBefore(draggedItem, this.nextSibling);
+                    } else {
+                        this.parentNode.insertBefore(draggedItem, this);
+                    }
+                    
+                    // Save the state before updating order
+                    saveState('Reordered tasks');
+                    
+                    // Update the order of tasks in the tasks array
+                    updateTasksOrder();
+                }
+                
+                return false;
+            }
+            
+            // Update tasks order based on current DOM order
+            function updateTasksOrder() {
+                const allItems = document.querySelectorAll('.task-item');
+                
+                // Create a map for quick lookup
+                const tasksMap = {};
+                tasks.forEach(task => {
+                    tasksMap[task.id] = task;
+                });
+                
+                // Create new ordered array
+                const newTasksOrder = [];
+                
+                allItems.forEach(item => {
+                    const taskId = item.getAttribute('data-id');
+                    if (tasksMap[taskId]) {
+                        newTasksOrder.push(tasksMap[taskId]);
+                    }
+                });
+                
+                // Update tasks array with items that may not be in the DOM (due to filtering)
+                tasks.forEach(task => {
+                    if (!newTasksOrder.some(t => t.id === task.id)) {
+                        newTasksOrder.push(task);
+                    }
+                });
+                
+                // Replace tasks array with new ordered array
+                tasks = newTasksOrder;
+                
+                // Save the updated tasks
+                saveTasks();
+            }
+
+            // Add a new task
+            function addTask() {
+                const text = taskInput.value.trim();
+                if (!text) return;
+
+                saveState('Added task');
+
+                const newTask = {
+                    id: Date.now().toString(),
+                    text: text,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+
+                tasks.unshift(newTask); // Add to beginning
+                saveTasks();
+                renderTasks();
+
+                // Reset input fields
+                taskInput.value = '';
+                taskInput.focus();
+            }
+
+            // Toggle task completion
+            function toggleTaskCompletion(id) {
+                saveState('Toggled task completion');
+
+                const task = tasks.find(t => t.id === id);
+                if (task) {
+                    task.completed = !task.completed;
+                    saveTasks();
+                    renderTasks();
+                }
+            }
+
+            // Delete a task
+            function deleteTask(id) {
+                saveState('Deleted task');
+
+                tasks = tasks.filter(task => task.id !== id);
+                saveTasks();
+                renderTasks();
+            }
+
+            // Clear all tasks
+            function clearAllTasks() {
+                if (tasks.length === 0 || !confirm('Are you sure you want to delete all tasks?')) {
+                    return;
+                }
+
+                saveState('Cleared all tasks');
+
+                tasks = [];
+                saveTasks();
+                renderTasks();
+            }
+
+            // Edit a task
+            function editTask(taskElement, task) {
+                const taskTextEl = taskElement.querySelector('.task-text');
+                const currentText = task.text;
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentText;
+                input.className = 'edit-task-input';
+                
+                taskTextEl.innerHTML = '';
+                taskTextEl.appendChild(input);
+                input.focus();
+                
+                // Save on enter or blur
+                function saveEdit() {
+                    saveState('Edited task');
+                    
+                    const newText = input.value.trim();
+                    
+                    if (newText) {
+                        task.text = newText;
+                        saveTasks();
+                        renderTasks();
+                    } else {
+                        renderTasks(); // Just rerender if empty
+                    }
+                }
+                
+                input.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        saveEdit();
+                    } else if (e.key === 'Escape') {
+                        renderTasks(); // Cancel edit
+                    }
+                });
+                
+                input.addEventListener('blur', saveEdit);
+            }
+
+            // Copy tasks to clipboard
+            function copyTasks() {
+                if (tasks.length === 0) {
+                    showToast('No tasks to copy.', 'error');
+                    return;
+                }
+                
+                let textOutput = '📋 MY TASKS 📋\n\n';
+                
+                tasks.forEach((task, index) => {
+                    const checkbox = task.completed ? '☑' : '☐';
+                    textOutput += `${checkbox} ${task.text}\n`;
+                });
+                
+                // Add a footer
+                textOutput += '\nExported from TaskMaster Pro - ' + new Date().toLocaleDateString();
+                
+                // Copy to clipboard
+                navigator.clipboard.writeText(textOutput)
+                    .then(() => {
+                        // Show animation on copy button
+                        const copyBtn = document.getElementById('copy-tasks-btn');
+                        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                        copyBtn.style.backgroundColor = 'var(--success-color)';
                         
-                        console.log('Script evaluated');
-                        updateDiagnostics('Script loaded and evaluated via fetch');
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy All Tasks';
+                            copyBtn.style.backgroundColor = '';
+                        }, 2000);
+                        
+                        showToast('Tasks copied to clipboard!', 'success');
                     })
                     .catch(err => {
-                        console.error('Failed to load script via fetch:', err);
-                        updateDiagnostics(`Error loading script: ${err.message}`);
-                        // Try with different casing as last resort
-                        fetch('./Script.js')
-                            .then(response => response.text())
-                            .then(jsContent => {
-                                const scriptElem = document.createElement('script');
-                                scriptElem.textContent = jsContent;
-                                document.body.appendChild(scriptElem);
-                                console.log('Script loaded with alternate casing');
-                            })
-                            .catch(() => {
-                                // If all else fails, show error to user
-                                const errorMsg = document.createElement('div');
-                                errorMsg.style.padding = '20px';
-                                errorMsg.style.margin = '20px auto';
-                                errorMsg.style.backgroundColor = '#f8d7da';
-                                errorMsg.style.color = '#721c24';
-                                errorMsg.style.borderRadius = '5px';
-                                errorMsg.style.textAlign = 'center';
-                                errorMsg.innerHTML = `<h3>Error Loading Application</h3>
-                                <p>Failed to load the application script. This may be due to network issues or deployment configuration.</p>
-                                <p>Try refreshing the page or contact the website administrator.</p>`;
-                                document.querySelector('.container').prepend(errorMsg);
-                            });
+                        console.error('Failed to copy: ', err);
+                        // Fallback method
+                        const textarea = document.createElement('textarea');
+                        textarea.value = textOutput;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        showToast('Tasks copied to clipboard!', 'success');
                     });
             }
-        }, 2000);
+
+            // Import tasks from text
+            function importTasks() {
+                const text = importTasksArea.value.trim();
+                if (!text) {
+                    showToast('Please paste some tasks to import.', 'error');
+                    return;
+                }
+                
+                saveState('Imported tasks');
+                
+                const lines = text.split('\n');
+                const newTasks = [];
+                
+                lines.forEach(line => {
+                    line = line.trim();
+                    if (!line || line.startsWith('📋') || line.startsWith('Exported from')) return;
+                    
+                    // Check for checkbox patterns like ☑, ☐, [x], [ ], - [ ], - [x], etc.
+                    const checkboxMatch = line.match(/^(?:[-*]?\s*(?:\[([x ])\]|([☑☐✓]))|([☑☐✓]))\s*/i);
+                    let isCompleted = false;
+                    
+                    if (checkboxMatch) {
+                        isCompleted = !!(checkboxMatch[1] === 'x' || checkboxMatch[2] === '☑' || checkboxMatch[2] === '✓' || 
+                                        checkboxMatch[3] === '☑' || checkboxMatch[3] === '✓');
+                        line = line.replace(/^[-*]?\s*(?:\[[x ]\]|[☑☐✓])\s*/i, '');
+                    }
+                    
+                    // Remove any order numbers like "1. Task"
+                    line = line.replace(/^\d+\.\s*/, '');
+                    
+                    line = line.trim();
+                    if (line) {
+                        newTasks.push({
+                            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                            text: line,
+                            completed: isCompleted,
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+                });
+                
+                if (newTasks.length === 0) {
+                    showToast('No valid tasks found in the imported text.', 'error');
+                    return;
+                }
+                
+                // Confirm before replacing or merging
+                const action = confirm(`Found ${newTasks.length} tasks. Click OK to add them to your existing tasks, or Cancel to replace all existing tasks.`);
+                
+                if (action) {
+                    // Merge with existing tasks
+                    tasks = [...newTasks, ...tasks];
+                } else {
+                    // Replace existing tasks
+                    tasks = newTasks;
+                }
+                
+                saveTasks();
+                renderTasks();
+                importTasksArea.value = '';
+                showToast(`Successfully imported ${newTasks.length} tasks!`, 'success');
+            }
+
+            // Toggle theme
+            function toggleTheme() {
+                document.body.classList.toggle('dark-theme');
+                const isDark = document.body.classList.contains('dark-theme');
+                localStorage.setItem('dark-theme', isDark);
+                
+                const icon = themeToggle.querySelector('i');
+                if (isDark) {
+                    icon.className = 'fas fa-sun';
+                } else {
+                    icon.className = 'fas fa-moon';
+                }
+            }
+
+            // Toggle import/export panel
+            function toggleImportExport() {
+                importExportPanel.classList.toggle('show');
+                
+                // Update button text
+                if (importExportPanel.classList.contains('show')) {
+                    importExportToggle.innerHTML = '<i class="fas fa-times"></i> Close Panel';
+                } else {
+                    importExportToggle.innerHTML = '<i class="fas fa-file-import"></i> Import/Export';
+                }
+            }
+
+            // Undo last action
+            function undoAction() {
+                if (undoStack.length === 0) return;
+                
+                const lastState = undoStack.pop();
+                
+                // Save current state to redo stack
+                redoStack.push({
+                    state: JSON.stringify(tasks),
+                    action: 'Redo ' + lastState.action
+                });
+                
+                // Restore previous state
+                tasks = JSON.parse(lastState.state);
+                saveTasks();
+                renderTasks();
+                
+                updateUndoRedoButtons();
+            }
+
+            // Redo last undone action
+            function redoAction() {
+                if (redoStack.length === 0) return;
+                
+                const nextState = redoStack.pop();
+                
+                // Save current state to undo stack
+                undoStack.push({
+                    state: JSON.stringify(tasks),
+                    action: 'Undo ' + nextState.action
+                });
+                
+                // Restore next state
+                tasks = JSON.parse(nextState.state);
+                saveTasks();
+                renderTasks();
+                
+                updateUndoRedoButtons();
+            }
+
+            // Show toast notification
+            function showToast(message, type = '') {
+                // Remove existing toast if any
+                const existingToast = document.querySelector('.toast');
+                if (existingToast) {
+                    existingToast.remove();
+                }
+                
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                
+                // Trigger animation
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 10);
+                
+                // Auto remove after 3 seconds
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                }, 3000);
+            }
+
+            // Event listeners
+            try {
+                addTaskBtn.addEventListener('click', addTask);
+                updateDiagnostics('Added click listener to Add Task button');
+                
+                taskInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') addTask();
+                });
+                
+                clearAllBtn.addEventListener('click', clearAllTasks);
+                filterSelect.addEventListener('change', renderTasks);
+                
+                copyTasksBtn.addEventListener('click', copyTasks);
+                importTasksBtn.addEventListener('click', importTasks);
+                
+                themeToggle.addEventListener('click', toggleTheme);
+                importExportToggle.addEventListener('click', toggleImportExport);
+                
+                undoBtn.addEventListener('click', undoAction);
+                redoBtn.addEventListener('click', redoAction);
+                
+                updateDiagnostics('All event listeners added successfully');
+            } catch (e) {
+                updateDiagnostics(`Error setting up event listeners: ${e.message}`);
+                console.error('Error setting up event listeners:', e);
+            }
+
+            // Initialize app
+            try {
+                loadTasks();
+                updateUndoRedoButtons();
+                
+                // Check for dark theme preference
+                if (localStorage.getItem('dark-theme') === 'true') {
+                    document.body.classList.add('dark-theme');
+                    themeToggle.querySelector('i').className = 'fas fa-sun';
+                }
+                
+                // Hide import/export panel by default
+                importExportPanel.classList.remove('show');
+                
+                updateDiagnostics('App initialized successfully');
+            } catch (e) {
+                updateDiagnostics(`Error initializing app: ${e.message}`);
+                console.error('Error initializing app:', e);
+            }
+        });
     </script>
 </body>
 </html>
